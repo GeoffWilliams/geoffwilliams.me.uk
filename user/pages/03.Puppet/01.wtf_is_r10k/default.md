@@ -12,10 +12,10 @@ Unfortunately R10K isn't really a killer robot and while useful doesn't do all y
 The best way I can think of to explain what R10K does is to say that it manages the contents of the puppet environments directory for you – and that is basically _ALL_ it does, although doing this would be a big job if you were to do everything manually.
 
 ## How does it work?
-R10K works around the model of having a git directory for each module you want to puppet to use. Back in the day, the advice from Puppet Labs was to use one big git directory for the whole module structure but as its easier to share modules with these days, the advice is now to split things up to aid reuse and versioning.
+R10K works around the model of having a git directory for each module you want to puppet to use. Back in the day, the advice from Puppet Labs was to use one big git directory for the whole module structure but as its easier to share modules these days, the advice is now to split things up to aid reuse and versioning.
 
 ## PuppetFile
-Having a whole bunch of different git repositories and forge modules to manually download each time you wanted to do some work in Puppet would be a major pain and to get around this R10K uses a 'PuppetFile' to specify what modules puppet should be using and where it should get them from – eg a branch on github, the Puppet Forge, etc.
+Having a whole bunch of different git repositories and forge modules to manually download each time you wanted to do some work in Puppet would be a major pain and to get around this R10K uses a `PuppetFile` to specify what modules puppet should be using and where it should get them from – eg a branch on github, the Puppet Forge, etc.
 
 ## Git
 R10K expects to be able to connect to a git (or other scm) server to retrieve the puppet file, hiera data and a couple of other files it needs to configure itself.
@@ -43,10 +43,10 @@ It does this because of a couple of changes you make to the puppet.conf file whe
 
 ```
 [main]
-modulepath = $confdir/environments/$environment/modules:/opt/puppet/share/puppet/modules 
+modulepath = $confdir/environments/$environment/modules:/opt/puppet/share/puppet/modules
 
 [master]
-manifest = $confdir/environments/$environment/site.pp 
+manifest = $confdir/environments/$environment/site.pp
 ```
 
 These lines perform the 'magic' of virtual environments by attempting to look for files in the $environment directory. The value of `$environment` comes from the `--environment` command line argument, the _client_ `puppet.conf` file or an ENC.
