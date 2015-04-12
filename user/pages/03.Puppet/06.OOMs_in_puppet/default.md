@@ -31,6 +31,7 @@ Warning: Not using cache on failed catalog
 Error: Could not retrieve catalog; skipping run
 Error: Could not send report: Error 400 on SERVER: Could not autoload puppet/reports/console: cannot load such file -- puppetx/puppetlabs/pe_console/console_http
 ```
+![screenshot](puppet_oom_errors.png)
 
 ## How to confirm diagnosis
 The definitive test for out of memory errors is to check the logs and investigate matches:

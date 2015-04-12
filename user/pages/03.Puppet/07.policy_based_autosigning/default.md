@@ -279,5 +279,4 @@ You could try baking the extra files needed to generate the CSR into your base O
 For full technical details of certificate signing, see:
 [Extending puppet CSRs](https://docs.puppetlabs.com/puppet/latest/reference/ssl_attributes_extensions.html)
 [Policy based autosigning](https://docs.puppetlabs.com/puppet/latest/reference/ssl_autosign.html#policy-based-autosigning)
-
-The example BASH script is attached to this article
+[Example Bash script](https://gist.github.com/GeoffWilliams/9889edfeef363a0b91c5)
