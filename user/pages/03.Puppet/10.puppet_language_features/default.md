@@ -158,6 +158,8 @@ Resource defaults are cascaded through manifests and the defaults your module wi
 
 Consider the following class structure with the defaults for File resources being set in the resource_defaults::cascade::cascade and resource_defaults::cascade::cascade_1 classes
 
+![cascading resource defaults](resource_defaults_cascade.png)
+
 ###Command
 ```
 # puppet apply resource_defaults/tests/cascade/cascade.pp
@@ -176,6 +178,8 @@ Complex include hierarchies
 Its possible to build complex hierarchies using the include keyword and this can lead to deterministic yet unpredictable application of resources defaults. Deterministic because puppet will always build graphs in the same way, but unpredictable because the reasons a graph has been built in a particular way are difficult for the average user to understand.
 
 This is best illustrated with an example.
+
+![resource defaults](resource_defaults.png)
 
 Here we have two classes, resource_defaults::complex::complex_a and resource_defaults::complex::complex_b which both set their own defaults for File resources and include another class called apache which creates a file resource by with whatever the current File resource defaults are.
 Both of these classes are then included by the resource_defaults::complex::complex class.
@@ -197,12 +201,13 @@ This was an interesting experiment but I would never recommend that you attempt 
 Finally and probably most importantly it should be noted that the author of the apache module never intended for alice or bob to own the apache configuration file. I of course wanted it to be owned by root, but because I didn't bother to specify either ownership information or resource defaults in my apache class for this file, it picked up settings from a completely module!
 
 For this reason, be sure to always specify owner, group and permissions for files you need to create with puppet – either directly within file resources or by using setting a resource default for your class.
-## Defined Resource Types and Inheritance
 
+## Defined Resource Types and Inheritance
 Defined resource types do work as expected when using puppet inheritance – to the extent that the use of the inherits keyword for resource types is redundant. The inherits keyword is incompatible (parse error) with the define keyword but you are free to use defined resource types within classes so this is what I've investigated in the defined_resource_types module.
 
 The module has the following structure:
 
+![defined resource types 0](defined_resource_types_0.png)
 
 The class defined_resource_types::base defines a type called my_dt(), attempts to override it in the class defined_resource_types::override and attempts to import the previously overridden defined type in the defined_resource_types class.
 Testing each puppet class in turn gives the following results:
@@ -308,3 +313,6 @@ Aside from the quirks around using defined resource types with inheritance, the 
 Often the only real way to debug things is to edit the manifests and insert a bunch of notify statements to identify where code is being executed.
 
 You can get nearly all the advantages of inheritance in puppet by simply including the class you would have normally extended in the vast majority of cases.
+
+## Files
+Files used above may be downloaded here: [puppet_language_feature_experiment_modules.tar.gz](puppet_language_feature_experiment_modules.tar.gz)

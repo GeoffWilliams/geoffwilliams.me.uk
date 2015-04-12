@@ -203,7 +203,7 @@ One important caveat of this method is that when puppet was run with the `--test
 The puppet configuration files and modules that were developed for this article are available as file downloads from this page if you want to take a closer look. The git control files are still present for each included module but the server for 'origin' will of-course be unreachable as it was one of the VMs in the lab.
 
 ### Files
-* [hiera.yaml](hiera.yaml.txt)
-* [puppet.conf](puppet.conf.txt)
-* [r10k.yaml](r10k.yaml.txt)
+* [hiera.yaml](hiera.yaml)
+* [puppet.conf](puppet.conf)
+* [r10k.yaml](r10k.yaml)
 * [r10k_lab.tar.gz](r10k_lab.tar.gz)
