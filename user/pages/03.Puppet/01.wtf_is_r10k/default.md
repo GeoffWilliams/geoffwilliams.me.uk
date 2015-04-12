@@ -55,3 +55,5 @@ This trick works because r10k has put files in the environment directory exactly
 
 ## Block diagram
 Visually, R10K looks something like this:
+
+![r10k block diagram](r10k_visual.png)

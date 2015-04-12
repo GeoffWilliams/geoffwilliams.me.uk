@@ -1,7 +1,7 @@
 absolute_urls: false
 
 home:
-  alias: '/about'
+  alias: '/About'
 
 pages:
   theme: antimatter
