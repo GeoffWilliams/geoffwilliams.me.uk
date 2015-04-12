@@ -96,3 +96,6 @@ I did things this way to demonstrate the minimum you need to do to get up and ru
 Full details of these are documented on the [puppletlabs documentation site](https://docs.puppetlabs.com/puppet/latest/reference/environments.html#directory-environments-vs-config-file-environments) but in a nut-shell, directory environments are a drop-in replacement for config file environments; work really simply; and do not require a restart of the puppet master.
 
 Eventually directory environments are slated to replace config file environments completely and they also integrate nicely with R10K and as long as you resist the temptation to edit the different directories on your puppet master directly (as I've done in this blog post... ;) they give you an easy path to deploy different environments with Puppet.
+
+## Files
+[directory_environments_example.tar.gz](directory_environments_example.tar.gz)
