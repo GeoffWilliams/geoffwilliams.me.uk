@@ -16,8 +16,8 @@ that calls some puppet scripts to switch between access settings:
 ![proxy dialogue](proxy_dialogue.png)
 
 # Setup
-1.  Have vagrant install the box file (currently uploading).  
-2.  Then create a new VM based on the box
+1.  Install the Vagrant [box file](https://www.dropbox.com/s/6rx01ekxhoyvwz3/centos_6.6_test_proxy_v1.0.0.box?dl=0)
+2.  Create a new VM based on the box
 3.  Add a bridge mode nework adaptor in the `Vagrantfile`
 ```
   config.vm.network "public_network"
