@@ -95,11 +95,3 @@ gz:
   type: file
   thumb: media/thumb-gz.png
   mime: application/gzip
-yaml:
-  type: file
-  thumb: media/thumb-txt.png
-  mime: text/yaml
-conf:
-  type: file
-  thumb: media/thumb-txt.png
-  mime: text/plain

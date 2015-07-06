@@ -52,7 +52,9 @@ class TwigExtension extends \Twig_Extension
             new \Twig_SimpleFilter('contains', [$this, 'containsFilter']),
             new \Twig_SimpleFilter('nicetime', [$this, 'nicetimeFilter']),
             new \Twig_SimpleFilter('absolute_url', [$this, 'absoluteUrlFilter']),
-            new \Twig_SimpleFilter('markdown', [$this, 'markdownFilter'])
+            new \Twig_SimpleFilter('markdown', [$this, 'markdownFilter']),
+            new \Twig_SimpleFilter('starts_with', [$this, 'startsWithFilter']),
+            new \Twig_SimpleFilter('ends_with', [$this, 'endsWithFilter'])
         ];
     }
 
@@ -337,14 +339,24 @@ class TwigExtension extends \Twig_Extension
 
         // Initialize the preferred variant of Parsedown
         if ($defaults['extra']) {
-            $parsedown = new ParsedownExtra($page);
+            $parsedown = new ParsedownExtra($page, $defaults);
         } else {
-            $parsedown = new Parsedown($page);
+            $parsedown = new Parsedown($page, $defaults);
         }
 
         $string = $parsedown->text($string);
 
         return $string;
+    }
+
+    public function startsWithFilter($needle, $haystack)
+    {
+        return Utils::startsWith($needle, $haystack);
+    }
+
+    public function endsWithFilter($needle, $haystack)
+    {
+        return Utils::endsWith($needle, $haystack);
     }
 
     /**

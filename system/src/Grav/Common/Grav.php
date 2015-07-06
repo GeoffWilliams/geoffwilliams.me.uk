@@ -1,7 +1,7 @@
 <?php
 namespace Grav\Common;
 
-use Grav\Common\Filesystem\Folder;
+use Grav\Common\Page\Medium\ImageMedium;
 use Grav\Common\Page\Pages;
 use Grav\Common\Service\ConfigServiceProvider;
 use Grav\Common\Service\ErrorServiceProvider;
@@ -10,7 +10,6 @@ use Grav\Common\Service\StreamsServiceProvider;
 use RocketTheme\Toolbox\DI\Container;
 use RocketTheme\Toolbox\Event\Event;
 use RocketTheme\Toolbox\Event\EventDispatcher;
-use Grav\Common\Page\Medium\Medium;
 
 /**
  * Grav
@@ -78,7 +77,7 @@ class Grav extends Container
             return new Cache($c);
         };
         $container['plugins'] = function ($c) {
-            return new Plugins($c);
+            return new Plugins();
         };
         $container['themes'] = function ($c) {
             return new Themes($c);
@@ -99,32 +98,35 @@ class Grav extends Container
             /** @var Pages $pages */
             $pages = $c['pages'];
 
-            // If base URI is set, we want to remove it from the URL.
-            $path = '/' . ltrim(Folder::getRelativePath($c['uri']->route(), $pages->base()), '/');
+            /** @var Uri $uri */
+            $uri = $c['uri'];
+
+            $path = rtrim($uri->path(), '/');
+            $path = $path ?: '/';
 
             $page = $pages->dispatch($path);
 
             if (!$page || !$page->routable()) {
-
-                // special  case where a media file is requested
                 $path_parts = pathinfo($path);
-
                 $page = $c['pages']->dispatch($path_parts['dirname'], true);
                 if ($page) {
                     $media = $page->media()->all();
-                    $media_file = urldecode($path_parts['basename']);
+
+                    $parsed_url = parse_url(urldecode($uri->basename()));
+
+                    $media_file = $parsed_url['path'];
+
+                    // if this is a media object, try actions first
                     if (isset($media[$media_file])) {
                         $medium = $media[$media_file];
-
-                        // loop through actions for the image and call them
-                        foreach ($c['uri']->query(null, true) as $action => $params) {
-                            if (in_array($action, Medium::$valid_actions)) {
+                        foreach ($uri->query(null, true) as $action => $params) {
+                            if (in_array($action, ImageMedium::$magic_actions)) {
                                 call_user_func_array(array(&$medium, $action), explode(',', $params));
                             }
                         }
-                        header('Content-type: '. $medium->get('mime'));
-                        echo file_get_contents($medium->path());
-                        die;
+                        Utils::download($medium->path(), false);
+                    } else {
+                        Utils::download($page->path() . DIRECTORY_SEPARATOR . $uri->basename(), true);
                     }
                 }
 
@@ -166,12 +168,6 @@ class Grav extends Container
 
     public function process()
     {
-        // Use output buffering to prevent headers from being sent too early.
-        ob_start();
-        if ($this['config']->get('system.cache.gzip')) {
-            ob_start('ob_gzhandler');
-        }
-
         /** @var Debugger $debugger */
         $debugger = $this['debugger'];
 
@@ -183,6 +179,12 @@ class Grav extends Container
         $debugger->init();
         $this['config']->debug();
         $debugger->stopTimer('_config');
+
+        // Use output buffering to prevent headers from being sent too early.
+        ob_start();
+        if ($this['config']->get('system.cache.gzip')) {
+            ob_start('ob_gzhandler');
+        }
 
         // Initialize the timezone
         if ($this['config']->get('system.timezone')) {
@@ -294,7 +296,31 @@ class Grav extends Container
     public function header()
     {
         $extension = $this['uri']->extension();
+
+        /** @var Page $page */
+        $page = $this['page'];
+
         header('Content-type: ' . $this->mime($extension));
+
+        // Calculate Expires Headers if set to > 0
+        $expires = $page->expires();
+
+        if ($expires > 0) {
+            $expires_date = gmdate('D, d M Y H:i:s', time() + $expires) . ' GMT';
+            header('Cache-Control: max-age=' . $expires_date);
+            header('Expires: '. $expires_date);
+        }
+
+        // Set the last modified time
+        if ($page->lastModified()) {
+            $last_modified_date = gmdate('D, d M Y H:i:s', $page->modified()) . ' GMT';
+            header('Last-Modified: ' . $last_modified_date);
+        }
+
+        // Calculate a Hash based on the raw file
+        if ($page->eTag()) {
+            header('ETag: ' . md5($page->raw() . $page->modified()));
+        }
 
         // Set debugger data in headers
         if (!($extension === null || $extension == 'html')) {
@@ -328,26 +354,31 @@ class Grav extends Container
     public function shutdown()
     {
         if ($this['config']->get('system.debugger.shutdown.close_connection')) {
-
+            //stop user abort
             if (function_exists('ignore_user_abort')) {
                 @ignore_user_abort(true);
             }
 
+            // close the session
             if (isset($this['session'])) {
                 $this['session']->close();
             }
 
+            // flush buffer if gzip buffer was started
             if ($this['config']->get('system.cache.gzip')) {
                 ob_end_flush(); // gzhandler buffer
             }
 
+            // get lengh and close the connection
             header('Content-Length: ' . ob_get_length());
-            header("Connection: close\r\n");
+            header("Connection: close");
 
-            ob_end_flush(); // regular buffer
-            ob_flush();
+            // flush the regular buffer
+            ob_end_flush();
+            @ob_flush();
             flush();
 
+            // fix for fastcgi close connection issue
             if (function_exists('fastcgi_finish_request')) {
                 @fastcgi_finish_request();
             }

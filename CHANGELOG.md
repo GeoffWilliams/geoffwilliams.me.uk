@@ -1,3 +1,109 @@
+# v0.9.29
+## 06/22/2015
+
+1. [](#new)
+    * New and improved Regex-powered redirect and route alias logic
+    * Added new `onBuildPagesInitialized` event for memory critical or time-consuming plugins
+    * Added a `setSummary()` method for pages
+2. [](#improved)
+    * Improved `MergeConfig()` logic for more control
+    * Travis skeleton build trigger implemented
+    * Set composer.json versions to stable versions where possible
+    * Disabled `last_modified` and `etag` page headers by default (causing too much page caching)
+3. [](#bugfix)
+    * Preload classes during `bin/gpm selfupgrade` to avoid issues with updated classes
+    * Fix for directory relative _down_ links
+
+# v0.9.28
+## 06/16/2015
+
+1. [](#new)
+    * Added method to set raw markdown on a page
+    * Added ability to enabled system and page level `etag` and `last_modified` headers
+2. [](#improved)
+    * Improved image path processing
+    * Improved query string handling
+    * Optimization to image handling supporting URL encoded filenames
+    * Use global `composer` when available rather than Grv provided one
+    * Use `PHP_BINARY` contant rather than `php` executable
+    * Updated Doctrine Cache library
+    * Updated Symfony libraries
+    * Moved `convertUrl()` method to Uri object
+3. [](#bugfix)
+    * Fix incorrect slug causing problems with CLI `uninstall`
+    * Fix Twig runtime error with assets pipeline in sufolder installations
+    * Fix for `+` in image filenames
+    * Fix for dot files causing issues with page processing
+    * Fix for Uri path detection on Windows platform
+    * Fix for atlernative media resolutions
+    * Fix for modularTypes key properties
+
+# v0.9.27
+## 05/09/2015
+
+1. [](#new)
+    * Added new composer CLI command
+    * Added page-level summary header overrides
+    * Added `size` back for Media objects
+    * Refactored Backup command in preparation for admin plugin
+    * Added a new `parseLinks` method to Plugins class
+    * Added `starts_with` and `ends_with` Twig filters
+2. [](#improved)
+    * Opitmized install of vendor libraries for speed improvement
+    * Improved configuration handling in preparation for admin plugin
+    * Cache optimization: Don't cache Twig templates when you pass dynamic params
+    * Moved `Utils::rcopy` to `Folder::rcopy`
+    * Improved `Folder::doDelete`
+    * Added check for required Curl in GPM
+    * Updated included composer.phar to latest version
+    * Various blueprint fixes for admin plugin
+    * Various PSR and code cleanup tasks
+3. [](#bugfix)
+    * Fix issue with Gzip not working with `onShutDown()` event
+    * Fix for URLs with trailing slashes
+    * Handle condition where certain errors resulted in blank page
+    * Fix for issue with theme name equal to base_url and asset pipeline
+    * Fix to properly nomralize font rewrite path
+    * Fix for absolute URLs below the current page
+    * Fix for `..` page references
+
+# v0.9.26
+## 04/24/2015
+
+3. [](#bugfix)
+    * Fixed issue with homepage routes failing with 'dirname' error
+
+# v0.9.25
+## 04/24/2015
+
+1. [](#new)
+    * Added support for E-Tag, Last-Modified, Cache-Control and Page-based expires headers
+2. [](#improved)
+    * Refactored media image handling to make it more flexible and support absolute paths
+    * Refactored page modification check process to make it faster
+    * User account improvements in preparation for Admin plugin
+    * Protect against timing attacks
+    * Reset default system expires time to 0 seconds (can override if you need to)
+3. [](#bugfix)
+    * Fix issues with spaces in webroot when using `bin/grav install`
+    * Fix for spaces in relative directory
+    * Bug fix in collection filtering
+
+# v0.9.24
+## 04/15/2015
+
+1. [](#new)
+    * Added support for chunked downloads of Assets
+    * Added new `onBeforeDownload()` event
+    * Added new `download()` and `getMimeType()` methods to Utils class
+    * Added configuration option for supported page types
+    * Added assets and media timestamp options (off by default)
+    * Added page expires configuration option
+2. [](#bugfix)
+    * Fixed issue with Nginx/Gzip and `ob_flush()` throwing error
+    * Fixed assets actions on 'direct media' URLs
+    * Fix for 'direct assets` with any parameters
+
 # v0.9.23
 ## 04/09/2015
 

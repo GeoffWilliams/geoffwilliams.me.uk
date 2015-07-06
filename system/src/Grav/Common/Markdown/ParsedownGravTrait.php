@@ -6,6 +6,7 @@ use Grav\Common\Debugger;
 use Grav\Common\GravTrait;
 use Grav\Common\Page\Medium\Medium;
 use Grav\Common\Uri;
+use Grav\Common\Utils;
 
 /**
  * A trait to add some custom processing to the identifyLink() method in Parsedown and ParsedownExtra
@@ -25,8 +26,9 @@ trait ParsedownGravTrait
      * Initialiazation function to setup key variables needed by the MarkdownGravLinkTrait
      *
      * @param $page
+     * @param $defaults
      */
-    protected function init($page)
+    protected function init($page, $defaults)
     {
         $this->page = $page;
         $this->pages = self::getGrav()['pages'];
@@ -35,7 +37,9 @@ trait ParsedownGravTrait
         $this->pages_dir = self::getGrav()['locator']->findResource('page://');
         $this->special_chars = array('>' => 'gt', '<' => 'lt', '"' => 'quot');
 
-        $defaults = self::getGrav()['config']->get('system.pages.markdown');
+        if ($defaults === null) {
+            $defaults = self::getGrav()['config']->get('system.pages.markdown');
+        }
 
         $this->setBreaksEnabled($defaults['auto_line_breaks']);
         $this->setUrlsLinked($defaults['auto_url_links']);
@@ -116,7 +120,6 @@ trait ParsedownGravTrait
 
         // if this is an image
         if (isset($excerpt['element']['attributes']['src'])) {
-
             $alt = $excerpt['element']['attributes']['alt'] ?: '';
             $title = $excerpt['element']['attributes']['title'] ?: '';
             $class = isset($excerpt['element']['attributes']['class']) ? $excerpt['element']['attributes']['class'] : '';
@@ -124,19 +127,16 @@ trait ParsedownGravTrait
             //get the url and parse it
             $url = parse_url(htmlspecialchars_decode($excerpt['element']['attributes']['src']));
 
-            $path_parts = pathinfo($url['path']);
-
             // if there is no host set but there is a path, the file is local
             if (!isset($url['host']) && isset($url['path'])) {
+                $path_parts = pathinfo($url['path']);
 
                 // get the local path to page media if possible
                 if ($path_parts['dirname'] == $this->page->url()) {
-                    $url['path'] = ltrim(str_replace($this->page->url(), '', $url['path']), '/');
+                    $url['path'] = $path_parts['basename'];
                     // get the media objects for this page
                     $media = $this->page->media();
-
                 } else {
-
                     // see if this is an external page to this one
                     $page_route = str_replace($this->base_url, '', $path_parts['dirname']);
 
@@ -204,52 +204,10 @@ trait ParsedownGravTrait
             // if there is no scheme, the file is local
             if (!isset($url['scheme']) && (count($url) > 0)) {
                 // convert the URl is required
-                $excerpt['element']['attributes']['href'] = $this->convertUrl(Uri::buildUrl($url));
+                $excerpt['element']['attributes']['href'] = Uri::convertUrl($this->page, Uri::buildUrl($url));
             }
         }
 
         return $excerpt;
-    }
-
-    /**
-     * Converts links from absolute '/' or relative (../..) to a grav friendly format
-     * @param  string $markdown_url the URL as it was written in the markdown
-     * @return string               the more friendly formatted url
-     */
-    protected function convertUrl($markdown_url)
-    {
-        // if absolute and starts with a base_url move on
-        if ($this->base_url != '' && strpos($markdown_url, $this->base_url) === 0) {
-            return $markdown_url;
-        // if its absolute and starts with /
-        } elseif (strpos($markdown_url, '/') === 0) {
-            return $this->base_url . $markdown_url;
-        } else {
-            $relative_path = $this->base_url . $this->page->route();
-            $real_path = $this->page->path() . '/' . parse_url($markdown_url, PHP_URL_PATH);
-
-            // strip numeric order from markdown path
-            if (($real_path)) {
-                $markdown_url = preg_replace('/^([\d]+\.)/', '', preg_replace('/\/([\d]+\.)/', '/', trim(preg_replace('/[^\/]+(\.md$)/', '', $markdown_url), '/')));
-            }
-
-            // else its a relative path already
-            $newpath = array();
-            $paths = explode('/', $markdown_url);
-
-            // remove the updirectory references (..)
-            foreach ($paths as $path) {
-                if ($path == '..') {
-                    $relative_path = dirname($relative_path);
-                } else {
-                    $newpath[] = $path;
-                }
-            }
-
-            // build the new url
-            $new_url = rtrim($relative_path, '/') . '/' . implode('/', $newpath);
-        }
-
-        return $new_url;
     }
 }

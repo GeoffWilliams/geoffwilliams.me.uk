@@ -1,3 +1,17 @@
+# v1.4.0
+## 05/09/2015
+
+1. [](#improved)
+    * Improved bluerpints
+1. [](#bugfix)
+    * Fix for when page.summary is equal to page.content
+
+# v1.3.9
+## 04/13/2015
+
+1. [](#bugfix)
+    * Fix for image class in modular template 'text.html.twig`
+
 # v1.3.8
 ## 04/07/2015
 
