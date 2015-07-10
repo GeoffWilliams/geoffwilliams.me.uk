@@ -2,6 +2,7 @@
 title: Blog
 ---
 # Blog
+* [Anatomy of an Augeas bug](anatomy_of_an_augeas_bug)
 * [Garbage Collection in Java](garbage_collection_in_java)
 * [Test Proxy Vagrant image](test_proxy)
 * [Avoid inheritance](avoid_inheritance)
