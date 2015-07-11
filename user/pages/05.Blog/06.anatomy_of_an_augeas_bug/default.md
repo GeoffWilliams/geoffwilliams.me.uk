@@ -76,9 +76,7 @@ flooding back.  This time about [Context-Free Grammars](https://en.wikipedia.org
 For the uninitiated, context-free grammars define the rules by which a string
 or data structure is parsed and converted into a [parse-tree](https://en.wikipedia.org/wiki/Parse_tree).
 
-They do so by providing a series of [production rules](https://en.wikipedia.org/wiki/Production_%28computer_science%29) that desribe how the entire parsing process in exacting detail.
-
-Basically, this is how you write a language compiler.
+They do so by providing a series of [production rules](https://en.wikipedia.org/wiki/Production_%28computer_science%29) that desribe how the entire parsing process in exacting detail.  Basically, this is how you write a language compiler.
 
 Inside the lens file, I saw this code::
 ```augeas
@@ -125,9 +123,9 @@ let sto_to_com_cmnd =
    in store (alias | non_alias)
 ```
 
-Which splits things up the parse depending on whether we have encountered
+Which splits up the parse depending on whether we have encountered
 an alias or a non alias.  It's hard to see but words containing a capital
-can _only_ be matched as aliases because the `non_alias` only matches
+can _only_ be matched as aliases because the `non_alias` rule only matches
 lower-case letters.
 
 Looking closely, we can see that the non aliases are allowed to start with an
@@ -136,7 +134,9 @@ optional `!` character but the aliases are not (we're missing the `/!?/` bit).
 ## Now what?
 It was time for a bit of research to see how to fix this properly in order to
 get the best chance of having a fix accepted upstream.  I found [this](https://stomp.colorado.edu/blog/blog/2011/01/07/on-finding-and-fixing-augeas-parse-errors/) page which was really helpful
-and definitely worth a read.
+and definitely worth a read.  Basically Augeas uses test driven development to your expected to write a test and then fix a bug or introduce a feature.
+
+This is the only sane way of producing a piece of software that relies on so many regular expressions.
 
 ## Writing the testcase
 The site above goes into lots of detail about testcases in Augeas.  For this
@@ -210,9 +210,7 @@ test Sudoers.spec get "%opssudoers ALL=(ALL) ALL, !BANNED\n" =
   }
 ```
 
-Briefly, this code code performs a partial parse on the input string using the `Sudoer.spec` rule that we looked at earlier.
-
-After the equals sign, we describe the *exact* partial parse tree - partial because we are only parsing against with the spec rule, not the whole file rule.
+Briefly, this code code performs a partial parse on the input string using the `Sudoer.spec` rule that we looked at earlier.  After the equals sign, we describe the *exact* partial parse tree - partial because we are only parsing against the spec rule, not the whole file rule.
 
 Once I was able to match the generated tree with the testcase tree, the tests passed.  You can tell your tests are passing when `augparse` gives no output, like this:
 
@@ -284,4 +282,4 @@ Request.
 
 ## Resolution
 Hopefully this fix can be merged upstream soon.  If your interested in a closer look
-look at the code that was produced, please see https://github.com/hercules-team/augeas/pull/26
+look at the code that was produced, please see the [Pull Request](https://github.com/hercules-team/augeas/pull/26)
