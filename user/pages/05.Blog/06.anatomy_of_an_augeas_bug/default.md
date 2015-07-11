@@ -86,8 +86,8 @@ let lns = ( empty | comment | includedir | alias | defaults | spec )*
 ```
 Which is clearly a the top level entry point into the CFG.
 
-What this line is saying is that the node `lns` can be rewritten *ONE* of the
-following nodes:
+What this line is saying is that the rule `lns` can be rewritten *ONE* of the
+following rules:
 * `empty`
 * `comment`
 * `includedir`
@@ -95,7 +95,7 @@ following nodes:
 * `defaults`
 * `spec`
 
-Lets have a look at the simplest one of these nodes: `empty`
+Lets have a look at the simplest one of these rules: `empty`
 ```augeas
 (* View: empty
 Map empty lines *)
@@ -106,7 +106,7 @@ characters.  Note the newline `\n` at end of the line.  I found out later that
 this is vital!  Miss it off and *nothing* will work as the line isn't treated
 as finished.
 
-After having a look at some of the other nodes, I eventually found the one I was
+After having a look at some of the other rules, I eventually found the one I was
 interested in: `spec` which looked like this:
 ```augeas
 let spec = [ label "spec" . indent
