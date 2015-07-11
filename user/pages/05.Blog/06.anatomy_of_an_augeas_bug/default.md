@@ -282,4 +282,4 @@ Request.
 
 ## Resolution
 Hopefully this fix can be merged upstream soon.  If your interested in a closer look
-look at the code that was produced, please see the [Pull Request](https://github.com/hercules-team/augeas/pull/26)
+look at the code that was produced, please see the [Pull Request](https://github.com/hercules-team/augeas/pull/263)
