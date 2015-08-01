@@ -84,7 +84,7 @@ let lns = ( empty | comment | includedir | alias | defaults | spec )*
 ```
 Which is clearly a the top level entry point into the CFG.
 
-What this line is saying is that the rule `lns` can be rewritten *ONE* of the
+What this line is saying is that the rule `lns` can be rewritten as the union of the
 following rules:
 * `empty`
 * `comment`
