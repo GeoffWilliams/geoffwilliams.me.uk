@@ -65,7 +65,7 @@ puppet
 
 Oh noes!  We're back to the settings from `defaults.rb` again - but why?
 
-A bit of googling leads to https://projects.puppetlabs.com/issues/16637 -- in a nutshell, when running as `root` puppet will default to reading its config file from `/etc/puppetlabs/puppet.conf` (if using PE or AIO) and for all other users will read from `~/.puppet`!  So the command above was looking for a non-existant config file in a hidden directory, no wonder it didn't work.
+A bit of googling leads to [https://projects.puppetlabs.com/issues/16637](https://projects.puppetlabs.com/issues/16637) -- in a nutshell, when running as `root` puppet will default to reading its config file from `/etc/puppetlabs/puppet.conf` (if using PE or AIO) and for all other users will read from `~/.puppet`!  So the command above was looking for a non-existant config file in a hidden directory, no wonder it didn't work.
 
 This can be fixed by adding the `--confdir` flag and our command now looks like this:
 ```ruby
@@ -96,4 +96,4 @@ FOO=$(puppet config print server)
 # Summary
 That should be all you need to start looking up your variables from `puppet.conf` instead of hardcoding them all over the place.
 
-Don't forget there's a complete configuration file reference over at https://docs.puppetlabs.com/references/latest/configuration.html
+Don't forget there's a complete configuration file reference over at [https://docs.puppetlabs.com/references/latest/configuration.html](https://docs.puppetlabs.com/references/latest/configuration.html)
