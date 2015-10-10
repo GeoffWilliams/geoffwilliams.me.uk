@@ -1,5 +1,4 @@
-# Puppet under Docker
-_With R10K_
+# Puppet under Docker _with R10K_
 
 Ever had the burning desire to run Puppet Enterprise inside a Docker container?  It's possible and I've done it.
 
