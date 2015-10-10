@@ -1,8 +1,11 @@
 <?php
-namespace Grav\Common;
+namespace Grav\Common\Twig;
 
+use Grav\Common\Grav;
 use Grav\Common\Config\Config;
 use Grav\Common\Page\Page;
+use Grav\Common\Inflector;
+use Grav\Common\Utils;
 use RocketTheme\Toolbox\ResourceLocator\UniformResourceLocator;
 
 /**
@@ -57,6 +60,7 @@ class Twig
     public function __construct(Grav $grav)
     {
         $this->grav = $grav;
+        $this->twig_paths = [];
     }
 
     /**
@@ -72,7 +76,23 @@ class Twig
             $locator = $this->grav['locator'];
             $debugger = $this->grav['debugger'];
 
-            $this->twig_paths = $locator->findResources('theme://templates');
+            /** @var Language $language */
+            $language = $this->grav['language'];
+
+            $active_language = $language->getActive();
+
+            $language_append = $active_language ? '/'.$active_language : '';
+
+            // handle language templates if available
+            if ($language->enabled()) {
+                $lang_templates = $locator->findResource('theme://templates/'.$active_language);
+                if ($lang_templates) {
+                    $this->twig_paths[] = $lang_templates;
+                }
+            }
+
+            $this->twig_paths = array_merge($this->twig_paths, $locator->findResources('theme://templates'));
+
             $this->grav->fireEvent('onTwigTemplatePaths');
 
             $this->loader = new \Twig_Loader_Filesystem($this->twig_paths);
@@ -84,12 +104,7 @@ class Twig
                 $params['cache'] = $locator->findResource('cache://twig', true, true);
             }
 
-            $this->twig = new \Twig_Environment($loader_chain, $params);
-            if ($debugger->enabled() && $config->get('system.debugger.twig')) {
-                $this->twig = new \DebugBar\Bridge\Twig\TraceableTwigEnvironment($this->twig);
-                $collector = new \DebugBar\Bridge\Twig\TwigCollector($this->twig);
-                $debugger->addCollector($collector);
-            }
+            $this->twig = new TwigEnvironment($loader_chain, $params);
 
             if ($config->get('system.twig.undefined_functions')) {
                 $this->twig->registerUndefinedFunctionCallback(function ($name) {
@@ -131,9 +146,10 @@ class Twig
                 'config' => $config,
                 'uri' => $this->grav['uri'],
                 'base_dir' => rtrim(ROOT_DIR, '/'),
-                'base_url' => $this->grav['base_url'],
-                'base_url_absolute' => $this->grav['base_url_absolute'],
-                'base_url_relative' => $this->grav['base_url_relative'],
+                'base_url' => $this->grav['base_url'] . $language_append,
+                'base_url_simple' => $this->grav['base_url'],
+                'base_url_absolute' => $this->grav['base_url_absolute'] . $language_append,
+                'base_url_relative' => $this->grav['base_url_relative'] . $language_append,
                 'theme_dir' => $locator->findResource('theme://'),
                 'theme_url' => $this->grav['base_url'] .'/'. $locator->findResource('theme://', false),
                 'site' => $config->get('site'),
@@ -283,13 +299,15 @@ class Twig
         $this->grav->fireEvent('onTwigSiteVariables');
         $pages = $this->grav['pages'];
         $page = $this->grav['page'];
+        $content = $page->content();
+        $config = $this->grav['config'];
 
         $twig_vars = $this->twig_vars;
 
         $twig_vars['pages'] = $pages->root();
         $twig_vars['page'] = $page;
         $twig_vars['header'] = $page->header();
-        $twig_vars['content'] = $page->content();
+        $twig_vars['content'] = $content;
         $ext = '.' . ($format ? $format : 'html') . TWIG_EXT;
 
         // determine if params are set, if so disable twig cache
@@ -304,15 +322,16 @@ class Twig
         try {
             $output = $this->twig->render($template, $twig_vars);
         } catch (\Twig_Error_Loader $e) {
-            // If loader error, and not .html.twig, try it as fallback
+            $error_msg = $e->getMessage();
+            // Try html version of this template if initial template was NOT html
             if ($ext != '.html'.TWIG_EXT) {
                 try {
                     $output = $this->twig->render($page->template().'.html'.TWIG_EXT, $twig_vars);
                 } catch (\Twig_Error_Loader $e) {
-                    throw new \RuntimeException($e->getRawMessage(), 404, $e);
+                    throw new \RuntimeException($error_msg, 400, $e);
                 }
             } else {
-                throw new \RuntimeException($e->getRawMessage(), 404, $e);
+                throw new \RuntimeException($error_msg, 400, $e);
             }
         }
 
