@@ -81,5 +81,19 @@ When combined with a static allocated IP address from your DHCP server or dynami
 ##### Rebooting
 Since the docker containers I want to run are marked to automatically restart (`--restart=always`) and the Docker-Pipework container is too, all the above example network configuration will survive a reboot or daemon restart - finally, _easy_ Docker networking!
 
+## Fixing DNS
+IP addresses will work out-of-the-box with this setup but all DNS lookups will fail as they are routed via Google DNS by default.  To fix this, the Docker *daemon* needs to be pointed at your own DNS server if your hostnames only exist on your own LAN.  E.g., assuming a DNS server at `192.168.1.1`, the following argument to the daemon would grant access:
+```shell
+--dns 192.168.1.1
+```
+
+On Debian, you can edit the file `/etc/default/docker` and add this argument to the `DOCKER_OPTS` variable.
+
+After restarting the Docker daemon, local DNS will work:
+```shell
+systemctl daemon-reload
+systemctl restart docker
+```
+
 ## The future
 Hopefully in the near future, this blog post will be redundant and giving an IP address to a container will be as simple as adding a flag to `docker run`.  Until then, happy bridged mode networking :)
