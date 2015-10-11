@@ -112,5 +112,7 @@ ip netns exec "$NSPID" "$DHCP_CLIENT" -i "$CONTAINER_IFNAME" \
 
 Now I can see multiple `udcpc` processes with `ps` where before there were none, so I should be able to run a service for more then 12 hours now ;-)
 
+Raised a [ticket](https://github.com/jpetazzo/pipework/issues/181) to try and figure out a way to fix this in pipework.  In the meantime, the script can be manually fixed.
+
 ## The future
 Hopefully in the near future, this blog post will be redundant and giving an IP address to a container will be as simple as adding a flag to `docker run`.  Until then, happy bridged mode networking :)
