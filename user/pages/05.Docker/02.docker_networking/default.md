@@ -95,5 +95,22 @@ systemctl daemon-reload
 systemctl restart docker
 ```
 
+## DHCP Gotcha
+Out-of-the box, there's one big issue with using `udhcpc` in pipework - the script invokes the command with the `-q` option which quits the daemon as soon as an IP address has been allocated.
+
+Eventually your container's DHCP lease will expire, leaving your container configured with the old IP address.  This can lead to IP address collisions and broken DNS if your using a dynamic DNS server.  In my case, i found that my containers worked perfectly for ~12 hours and then slowly started to work erratically before dropping off my network completely.  Presumably due to browser DNS caching.
+
+### Fix
+Unfortunately, there isn't an elegant fix to this problem, I believe the `-q` option was added to avoid having a bunch of `udhcpc` clients hanging around trying to obtain IP addresses for long-dead containers.
+
+Having said that, the containers I want to give DHCP addresses to are ones that I want to be running all the time so this shouldn't be a big problem for my own personal setup.  If I change the `/sbin/pipework` script inside my Docker-Pipework, it works great!
+
+Change line 324 to read:
+```shell
+ip netns exec "$NSPID" "$DHCP_CLIENT" -i "$CONTAINER_IFNAME" \
+```
+
+Now I can see multiple `udcpc` processes with `ps` where before there were none, so I should be able to run a service for more then 12 hours now ;-)
+
 ## The future
 Hopefully in the near future, this blog post will be redundant and giving an IP address to a container will be as simple as adding a flag to `docker run`.  Until then, happy bridged mode networking :)
