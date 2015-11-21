@@ -13,6 +13,7 @@
 				{% include 'partials/sidebar.html.twig' with {'blog':page.parent}%}
 			</div>
 		</div>
+    {% include 'partials/comments.html.twig' with {'page': page} %}
 	{% endblock %}
 
 {% endembed %}
