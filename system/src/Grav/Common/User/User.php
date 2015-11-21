@@ -5,6 +5,7 @@ use Grav\Common\Data\Blueprints;
 use Grav\Common\Data\Data;
 use Grav\Common\File\CompiledYamlFile;
 use Grav\Common\GravTrait;
+use Grav\Common\Utils;
 
 /**
  * User object
@@ -39,10 +40,29 @@ class User extends Data
         if (!isset($content['username'])) {
             $content['username'] = $username;
         }
+        if (!isset($content['state'])) {
+            $content['state'] = 'enabled';
+        }
         $user = new User($content, $blueprint);
         $user->file($file);
 
         return $user;
+    }
+
+    /**
+     * Remove user account.
+     *
+     * @param string $username
+     * @return bool True is the action was performed
+     */
+    public static function remove($username)
+    {
+        $file_path = self::getGrav()['locator']->findResource('account://' . $username . YAML_EXT);
+        if (file_exists($file_path) && unlink($file_path)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -122,7 +142,11 @@ class User extends Data
             return false;
         }
 
-        return $this->get("access.{$action}") === true;
+        if (isset($this->state) && $this->state !== 'enabled') {
+            return false;
+        }
+
+        return Utils::isPositive($this->get("access.{$action}"));
     }
 
     /**

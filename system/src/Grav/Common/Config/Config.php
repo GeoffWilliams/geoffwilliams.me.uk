@@ -30,6 +30,12 @@ class Config extends Data
                 '' => ['user'],
             ]
         ],
+        'asset' => [
+            'type' => 'ReadOnlyStream',
+            'prefixes' => [
+                '' => ['assets'],
+            ]
+        ],
         'blueprints' => [
             'type' => 'ReadOnlyStream',
             'prefixes' => [
@@ -194,7 +200,7 @@ class Config extends Data
             $checkConfig = $this->get('system.cache.check.config', true);
             $checkSystem = $this->get('system.cache.check.system', true);
 
-            if (!$checkBlueprints && !!$checkLanguages && $checkConfig && !$checkSystem) {
+            if (!$checkBlueprints && !$checkLanguages && !$checkConfig && !$checkSystem) {
                 $this->messages[] = 'Skip configuration timestamp check.';
                 return false;
             }
@@ -286,6 +292,7 @@ class Config extends Data
 
     protected function loadCompiledConfig($configs, $plugins, $filename = null)
     {
+        $checksum = md5(json_encode($configs));
         $filename = $filename
             ? CACHE_DIR . 'compiled/config/' . $filename . '-' . $this->environment . '.php'
             : CACHE_DIR . 'compiled/config/' . $checksum . '-' . $this->environment . '.php';
@@ -366,14 +373,16 @@ class Config extends Data
 
             // Load languages.
             $this->languages = new Languages;
-
-            if (isset($languageFiles['user/plugins'])) {
-                foreach ((array) $languageFiles['user/plugins'] as $plugin => $item) {
-                    $lang_file = CompiledYamlFile::instance($item['file']);
-                    $content = $lang_file->content();
-                    $this->languages->mergeRecursive($content);
+            $pluginPaths = str_ireplace(GRAV_ROOT . '/', '', array_reverse($plugins));
+            foreach ($pluginPaths as $path) {
+                if (isset($languageFiles[$path])) {
+                    foreach ((array) $languageFiles[$path] as $plugin => $item) {
+                        $lang_file = CompiledYamlFile::instance($item['file']);
+                        $content = $lang_file->content();
+                        $this->languages->mergeRecursive($content);
+                    }
+                    unset($languageFiles[$path]);
                 }
-                unset($languageFiles['user/plugins']);
             }
 
             foreach ($languageFiles as $location) {
