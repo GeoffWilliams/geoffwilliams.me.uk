@@ -1,0 +1,13 @@
+enabled: true
+from: 'geoff@geoffwilliams.me.uk'
+to: 'geoff@geoffwilliams.me.uk'
+mailer:
+  engine: mail
+#  smtp:
+#    server: localhost
+#    port: 25
+#    encryption: none
+#    user: ''
+#    password: ''
+  sendmail:
+    bin: '/usr/sbin/sendmail'
