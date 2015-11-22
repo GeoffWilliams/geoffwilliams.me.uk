@@ -54,26 +54,26 @@ form:
           type: hidden
           evaluateDefault: grav.uri.path
 
-        - name: g-recaptcha-response
-          label: Captcha
-          type: captcha
-          recatpcha_site_key: 6LdfghETAAAAAMKwhIq6zdMY3tgVWssq-DL5P2wn
-          recaptcha_not_validated: 'Captcha not valid!'
-          validate:
-            required: true
-          process:
-            ignore: true
+#       - name: g-recaptcha-response
+#         label: Captcha
+#         type: captcha
+#         recatpcha_site_key: 6LdfghETAAAAAMKwhIq6zdMY3tgVWssq-DL5P2wn
+#         recaptcha_not_validated: 'Captcha not valid!'
+#         validate:
+#           required: true
+#         process:
+#           ignore: true
 
     buttons:
         - type: submit
           value: Submit
 
     process:
-        - email:
-            subject: "[New Comment] from {{ form.value.name|e }}"
-            body: "{% include 'forms/data.html.twig' %}"
-        - captcha:
-            recatpcha_secret: 6LdfghETAAAAAEip610fxYAt-H-WoYTwF4TmgScW
+#       - email:
+#           subject: "[New Comment] from {{ form.value.name|e }}"
+#           body: "{% include 'forms/data.html.twig' %}"
+#       - captcha:
+#           recatpcha_secret: 6LdfghETAAAAAEip610fxYAt-H-WoYTwF4TmgScW
         - addComment:
         - message: Thank you for writing your comment!
 
