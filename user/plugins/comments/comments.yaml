@@ -1,7 +1,10 @@
 enabled: true
 
 enable_on_routes:
-  - '/blog'
+  - '/Puppet/'
+  - '/Projects/'
+  - '/Blog/'
+  - '/Docker/'
 
 disable_on_routes:
   - /blog/blog-post-to-ignore
@@ -54,7 +57,7 @@ form:
         - name: g-recaptcha-response
           label: Captcha
           type: captcha
-          recatpcha_site_key: e32iojeoi32jeoi32jeoij32oiej32oiej3
+          recatpcha_site_key: 6LdfghETAAAAAMKwhIq6zdMY3tgVWssq-DL5P2wn
           recaptcha_not_validated: 'Captcha not valid!'
           validate:
             required: true
@@ -70,7 +73,7 @@ form:
             subject: "[New Comment] from {{ form.value.name|e }}"
             body: "{% include 'forms/data.html.twig' %}"
         - captcha:
-            recatpcha_secret: ej32oiej23oiej32oijeoi32jeio32je
+            recatpcha_secret: 6LdfghETAAAAAEip610fxYAt-H-WoYTwF4TmgScW
         - addComment:
         - message: Thank you for writing your comment!
 
