@@ -1,6 +1,6 @@
 enabled: true
-from: ''
-to: ''
+from: 'geoff@geoffwilliams.me.uk'
+to: 'geoff@geoffwilliams.me.uk'
 mailer:
   engine: mail
   smtp:
