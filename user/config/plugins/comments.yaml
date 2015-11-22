@@ -69,9 +69,9 @@ form:
           value: Submit
 
     process:
-#       - email:
-#           subject: "[New Comment] from {{ form.value.name|e }}"
-#           body: "{% include 'forms/data.html.twig' %}"
+       - email:
+           subject: "[New Comment] from {{ form.value.name|e }}"
+           body: "{% include 'forms/data.html.twig' %}"
 #       - captcha:
 #           recatpcha_secret: 6LdfghETAAAAAEip610fxYAt-H-WoYTwF4TmgScW
         - addComment:
