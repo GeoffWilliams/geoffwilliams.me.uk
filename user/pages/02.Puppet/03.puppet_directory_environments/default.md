@@ -1,6 +1,9 @@
 ---
 title: Puppet directory environments
 ---
+# Outdated
+This article was written for an old version of Puppet Enterprise and exists for reference purposes only.  Recent versions of Puppet Enterprise enable directory environments out-of-the box.
+
 # Puppet directory environments vs config file environments
 Puppet has allowed "environments" in the `puppet.conf` file for a long time but there's now a new way to create environments using a simple directory based approach called "directory environments".
 
