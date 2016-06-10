@@ -120,10 +120,10 @@ With the module all tested (and documented), its ready to go on the Puppet Forge
 puppet module build
 ```
 I can then upload the module to my Puppet Forge account to make it available to the world:
-https://forge.puppet.com/geoffwilliams/weblogic_version/readme
+[https://forge.puppet.com/geoffwilliams/weblogic_version/readme](https://forge.puppet.com/geoffwilliams/weblogic_version/readme)
 
 #### GitHub
-Of course, I also made the module source code available on GitHub over at https://github.com/GeoffWilliams/puppet-weblogic_version so that others can contribute to and improve the code if they find it useful.
+Of course, I also made the module source code available on GitHub over at [https://github.com/GeoffWilliams/puppet-weblogic_version](https://github.com/GeoffWilliams/puppet-weblogic_version) so that others can contribute to and improve the code if they find it useful.
 
 ### Deploying the module
 The easiest way to deploy the module is to run the `puppet module install` command that the Puppet Forge shows on the page above:
