@@ -43,9 +43,11 @@ We need to tell KDE to start the ibus-daemon on login
 
 ## 2.3 Add ibus-daemon
 Click `Add Program...`, then type `ibus-daemon` and click `OK` until the system accepts the change.
+
 ![autostart ibus-daemon](step2_iii.png)
 
 When you've finished, the screen should look like this:
+
 ![finished](step2_iv.png)
 
 # 3. Configure input methods
@@ -62,10 +64,12 @@ Now we need to tell the system to use `ibus`.  I had a few extra options in my l
 
 ## 3.4 Select ibus
 Choose `ibus` from the list and then click `OK`
+
 ![ibus mode](step3_iv.png)
 
 ## 3.5 Summary
 Check the summary information and click `OK`
+
 ![summary](step3_v.png)
 
 ## 3.6 Reboot
@@ -80,6 +84,7 @@ If it all worked, you should now have a new indicator in the panel at the bottom
 ![switcher icon](step4_i.png)
 
 To switch languages, we can click the icon or use `Windows Key` + `Space` at the same time to switch:
+
 ![switch languages hotkey](switch_lang.jpg)
 
 The icon will change:
@@ -88,6 +93,7 @@ The icon will change:
 
 ## 4.2 Try out Hangul mode
 If we type something now, we can see we are still getting English input, we need to activate Hangul (Korean) mode by pressing `Shift` + `Space` at the same time:
+
 ![hangul mode](hangul_mode.jpg)
 
 Now we can easily switch between typing in Korean and English.  I used the `kate` editor to practice but you can just try this in firefox and it should work too.  You can also use the icon in the bottom right panel to switch:
