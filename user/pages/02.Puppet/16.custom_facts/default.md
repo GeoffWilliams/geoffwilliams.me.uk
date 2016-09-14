@@ -28,7 +28,7 @@ Custom facts need to be created in the `lib/facter` directory inside the module 
 
 ```shell
 cd weblogic_version/
-lib/facter -p
+mkdir lib/facter -p
 ```
 
 Once the directory is created, we can start writing the ruby code for the fact.  By convention, the filename should be the name of the fact being created and then a `.rb` file extension, in this case we could creat the file `lib/facter/weblogic_version.rb`.
