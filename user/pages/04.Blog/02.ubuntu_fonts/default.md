@@ -20,19 +20,16 @@ fc-cache -v
 rm -f IELPKTH.CAB
 
 # kill the blur
-sudo rm /etc/fonts.d/10-antialias.conf
+sudo rm /etc/fonts/conf.d/10-antialias.conf
 # fix hinting
-sudo rm /etc/fonts.d/10-hinting-slight.conf
-sudo ln -s /etc/fonts.d/10-hinting-full.conf /etc/fonts.d/10-hinting-full.conf
+sudo rm /etc/fonts/conf.d/10-hinting-slight.conf
+sudo rm /etc/fonts/conf.d/10-hinting-full.conf
+sudo ln -s /etc/fonts/conf.avail/10-hinting-full.conf /etc/fonts/conf.d/10-hinting-full.conf
 ```
 
 # activate changes
 ```bash
 sudo dpkg-reconfigure fontconfig
-```
-
-Final fix if firefox now looks ugly:
-Edit the file `~/.config/fontconfig/fonts.conf` and make sure that hinting is enabled.
 
 Now you can enjoy read without needing to visit the optician ;-) - See screenshot:
 
