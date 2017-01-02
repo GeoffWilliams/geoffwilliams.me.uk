@@ -27,7 +27,7 @@ sudo rm /etc/fonts/conf.d/10-hinting-full.conf
 sudo ln -s /etc/fonts/conf.avail/10-hinting-full.conf /etc/fonts/conf.d/10-hinting-full.conf
 ```
 
-# activate changes
+# Activate changes
 ```bash
 sudo dpkg-reconfigure fontconfig
 
