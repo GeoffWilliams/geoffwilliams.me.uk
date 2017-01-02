@@ -1,21 +1,20 @@
 <?php
+/**
+ * @package    Grav.Common.Page
+ *
+ * @copyright  Copyright (C) 2014 - 2016 RocketTheme, LLC. All rights reserved.
+ * @license    MIT License; see LICENSE file for details.
+ */
+
 namespace Grav\Common\Page\Medium;
 
 use Grav\Common\File\CompiledYamlFile;
-use Grav\Common\GravTrait;
+use Grav\Common\Grav;
 use Grav\Common\Data\Data;
 use Grav\Common\Data\Blueprint;
 
-/**
- * The Medium is a general class for multimedia objects in Grav pages, specific implementations will derive from
- *
- * @author Grav
- * @license MIT
- *
- */
 class Medium extends Data implements RenderableInterface
 {
-    use GravTrait;
     use ParsedownHtmlTrait;
 
     /**
@@ -60,8 +59,8 @@ class Medium extends Data implements RenderableInterface
     {
         parent::__construct($items, $blueprint);
 
-        if (self::getGrav()['config']->get('system.media.enable_media_timestamp', true)) {
-            $this->querystring('&' . self::getGrav()['cache']->getKey());
+        if (Grav::instance()['config']->get('system.media.enable_media_timestamp', true)) {
+            $this->querystring('&' . Grav::instance()['cache']->getKey());
         }
 
         $this->def('mime', 'application/octet-stream');
@@ -101,7 +100,9 @@ class Medium extends Data implements RenderableInterface
         }
 
         $alternative->set('ratio', $ratio);
-        $this->alternatives[(float) $ratio] = $alternative;
+        $width = $alternative->get('width');
+
+        $this->alternatives[$width] = $alternative;
     }
 
     /**
@@ -118,7 +119,7 @@ class Medium extends Data implements RenderableInterface
      * Return PATH to file.
      *
      * @param bool $reset
-     * @return  string path to file
+     * @return string path to file
      */
     public function path($reset = true)
     {
@@ -137,25 +138,25 @@ class Medium extends Data implements RenderableInterface
      */
     public function url($reset = true)
     {
-        $output = preg_replace('|^' . GRAV_ROOT . '|', '', $this->get('filepath'));
+        $output = preg_replace('|^' . preg_quote(GRAV_ROOT) . '|', '', $this->get('filepath'));
 
         if ($reset) {
             $this->reset();
         }
 
-        return self::$grav['base_url'] . $output . $this->querystring() . $this->urlHash();
+        return Grav::instance()['base_url'] . $output . $this->querystring() . $this->urlHash();
     }
 
     /**
      * Get/set querystring for the file's url
      *
-     * @param  string  $hash
-     * @param  boolean $withHash
+     * @param  string  $querystring
+     * @param  boolean $withQuestionmark
      * @return string
      */
     public function querystring($querystring = null, $withQuestionmark = true)
     {
-        if ($querystring) {
+        if (!is_null($querystring)) {
             $this->set('querystring', ltrim($querystring, '?&'));
 
             foreach ($this->alternatives as $alt) {
@@ -200,10 +201,11 @@ class Medium extends Data implements RenderableInterface
      * @param  string  $title
      * @param  string  $alt
      * @param  string  $class
+     * @param  string  $id
      * @param  boolean $reset
      * @return array
      */
-    public function parsedownElement($title = null, $alt = null, $class = null, $reset = true)
+    public function parsedownElement($title = null, $alt = null, $class = null, $id = null, $reset = true)
     {
         $attributes = $this->attributes;
 
@@ -214,8 +216,9 @@ class Medium extends Data implements RenderableInterface
             else
                 $style .= $key . ': ' . $value . ';';
         }
-        if ($style)
+        if ($style) {
             $attributes['style'] = $style;
+        }
 
         if (empty($attributes['title'])) {
             if (!empty($title)) {
@@ -238,6 +241,14 @@ class Medium extends Data implements RenderableInterface
                 $attributes['class'] = $class;
             } elseif (!empty($this->items['class'])) {
                 $attributes['class'] = $this->items['class'];
+            }
+        }
+
+        if (empty($attributes['id'])) {
+            if (!empty($id)) {
+                $attributes['id'] = $id;
+            } elseif (!empty($this->items['id'])) {
+                $attributes['id'] = $this->items['id'];
             }
         }
 
@@ -390,6 +401,38 @@ class Medium extends Data implements RenderableInterface
         }
 
         return $this->link($reset, $attributes);
+    }
+
+    /**
+     * Add a class to the element from Markdown or Twig
+     * Example: ![Example](myimg.png?classes=float-left) or ![Example](myimg.png?classes=myclass1,myclass2)
+     *
+     * @return $this
+     */
+    public function classes()
+    {
+        $classes = func_get_args();
+        if (!empty($classes)) {
+            $this->attributes['class'] = implode(',', (array)$classes);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add an id to the element from Markdown or Twig
+     * Example: ![Example](myimg.png?id=primary-img)
+     *
+     * @param $id
+     * @return $this
+     */
+    public function id($id)
+    {
+        if (is_string($id)) {
+            $this->attributes['id'] = trim($id);
+        }
+
+        return $this;
     }
 
     /**

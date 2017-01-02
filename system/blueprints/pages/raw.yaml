@@ -1,6 +1,6 @@
 rules:
   slug:
-    pattern: "[a-z][a-z0-9_\-]+"
+    pattern: '[a-z][a-z0-9_\-]+'
     min: 2
     max: 80
 
@@ -19,9 +19,19 @@ form:
 
           fields:
             frontmatter:
-              type: frontmatter
+              classes: frontmatter
+              type: editor
               label: PLUGIN_ADMIN.FRONTMATTER
               autofocus: true
+              codemirror:
+                mode: 'yaml'
+                indentUnit: 4
+                autofocus: true
+                indentWithTabs: false
+                lineNumbers: true
+                styleActiveLine: true
+                gutters: ['CodeMirror-lint-markers']
+                lint: true
 
             content:
               type: markdown
@@ -63,13 +73,14 @@ form:
                       validate:
                         type: slug
                         required: true
+                        pattern: '[a-zа-я0-9_\-]+'
 
                     route:
                       type: select
                       label: PLUGIN_ADMIN.PARENT
                       classes: fancy
-                      '@data-options': '\Grav\Common\Page\Pages::parents'
-                      '@data-default': '\Grav\Plugin\admin::route'
+                      data-options@: '\Grav\Common\Page\Pages::parentsRawRoutes'
+                      data-default@: '\Grav\Plugin\Admin\Admin::rawRoute'
                       options:
                         '/': PLUGIN_ADMIN.DEFAULT_OPTION_ROOT
 
@@ -79,7 +90,7 @@ form:
                       label: PLUGIN_ADMIN.DISPLAY_TEMPLATE
                       help: PLUGIN_ADMIN.DISPLAY_TEMPLATE_HELP
                       default: default
-                      '@data-options': '\Grav\Common\Page\Pages::types'
+                      data-options@: '\Grav\Common\Page\Pages::types'
                       validate:
                         required: true
 

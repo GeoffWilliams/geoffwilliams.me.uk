@@ -17,6 +17,7 @@ class CommentsPlugin extends Plugin
 {
     protected $route = 'comments';
     protected $enable = false;
+    protected $comments_cache_id;
 
     /**
      * @return array
@@ -24,43 +25,55 @@ class CommentsPlugin extends Plugin
     public static function getSubscribedEvents()
     {
         return [
-            'onPluginsInitialized' => ['onPluginsInitialized', 0],
-            'onFormProcessed' => ['onFormProcessed', 0],
-            'onPageInitialized' => ['onPageInitialized', 0],
-            'onTwigSiteVariables' => ['onTwigSiteVariables', 0]
+            'onPluginsInitialized' => ['onPluginsInitialized', 0]
         ];
     }
 
     /**
      * Initialize form if the page has one. Also catches form processing if user posts the form.
+     *
+     * Used by Form plugin < 2.0, kept for backwards compatibility
+     *
+     * @deprecated
      */
     public function onPageInitialized()
     {
-        if (!$this->isAdmin()) {
-            /** @var Page $page */
-            $page = $this->grav['page'];
-            if (!$page) {
-                return;
-            }
+        /** @var Page $page */
+        $page = $this->grav['page'];
+        if (!$page) {
+            return;
+        }
 
-            if ($this->enable) {
-                $header = $page->header();
-                if (!isset($header->form)) {
-                    $header->form = $this->grav['config']->get('plugins.comments.form');
-                    $page->header($header);
-                }
+        if ($this->enable) {
+            $header = $page->header();
+            if (!isset($header->form)) {
+                $header->form = $this->grav['config']->get('plugins.comments.form');
+                $page->header($header);
             }
         }
     }
 
-    public function onTwigSiteVariables() {
-        if (!$this->isAdmin()) {
-            $this->grav['twig']->enable = $this->enable;
+    /**
+     * Add the comment form information to the page header dynamically
+     *
+     * Used by Form plugin >= 2.0
+     */
+    public function onFormPageHeaderProcessed(Event $event)
+    {
+        $header = $event['header'];
 
-            if ($this->enable) {
-                $this->grav['twig']->comments = $this->fetchComments();
+        if ($this->enable) {
+            if (!isset($header->form)) {
+                $header->form = $this->grav['config']->get('plugins.comments.form');
             }
         }
+
+        $event->header = $header;
+    }
+
+    public function onTwigSiteVariables() {
+        $this->grav['twig']->enable_comments_plugin = $this->enable;
+        $this->grav['twig']->comments = $this->fetchComments();
     }
 
     /**
@@ -96,44 +109,70 @@ class CommentsPlugin extends Plugin
     }
 
     /**
+     * Frontend side initialization
+     */
+    public function initializeFrontend()
+    {
+        $this->calculateEnable();
+
+        $this->enable([
+            'onTwigTemplatePaths' => ['onTwigTemplatePaths', 0],
+        ]);
+
+        if ($this->enable) {
+            $this->enable([
+                'onFormProcessed' => ['onFormProcessed', 0],
+                'onFormPageHeaderProcessed' => ['onFormPageHeaderProcessed', 0],
+                'onPageInitialized' => ['onPageInitialized', 10],
+                'onTwigSiteVariables' => ['onTwigSiteVariables', 0]
+            ]);
+        }
+
+        $cache = $this->grav['cache'];
+        $uri = $this->grav['uri'];
+
+        //init cache id
+        $this->comments_cache_id = md5('comments-data' . $cache->getKey() . '-' . $uri->url());
+    }
+
+    /**
+     * Admin side initialization
+     */
+    public function initializeAdmin()
+    {
+        /** @var Uri $uri */
+        $uri = $this->grav['uri'];
+
+        $this->enable([
+            'onTwigTemplatePaths' => ['onTwigAdminTemplatePaths', 0],
+            'onAdminMenu' => ['onAdminMenu', 0],
+            'onDataTypeExcludeFromDataManagerPluginHook' => ['onDataTypeExcludeFromDataManagerPluginHook', 0],
+        ]);
+
+        if (strpos($uri->path(), $this->config->get('plugins.admin.route') . '/' . $this->route) === false) {
+            return;
+        }
+
+        $page = $this->grav['uri']->param('page');
+        $comments = $this->getLastComments($page);
+
+        if ($page > 0) {
+            echo json_encode($comments);
+            exit();
+        }
+
+        $this->grav['twig']->comments = $comments;
+        $this->grav['twig']->pages = $this->fetchPages();
+    }
+
+    /**
      */
     public function onPluginsInitialized()
     {
-        if (!$this->isAdmin()) {
-
-            $this->calculateEnable();
-
-            $this->enable([
-                'onTwigTemplatePaths' => ['onTwigTemplatePaths', 0],
-            ]);
-
+        if ($this->isAdmin()) {
+            $this->initializeAdmin();
         } else {
-
-            /** @var Uri $uri */
-            $uri = $this->grav['uri'];
-
-            //Admin
-            $this->enable([
-                'onTwigTemplatePaths' => ['onTwigAdminTemplatePaths', 0],
-                'onAdminMenu' => ['onAdminMenu', 0],
-                'onAdminTemplateNavPluginHook' => ['onAdminMenu', 0], //DEPRECATED
-                'onDataTypeExcludeFromDataManagerPluginHook' => ['onDataTypeExcludeFromDataManagerPluginHook', 0],
-            ]);
-
-            if (strpos($uri->path(), $this->config->get('plugins.admin.route') . '/' . $this->route) === false) {
-                return;
-            }
-
-            $page = $this->grav['uri']->param('page');
-            $comments = $this->getLastComments($page);
-
-            if ($page > 0) {
-                echo json_encode($comments);
-                exit();
-            }
-
-            $this->grav['twig']->comments = $comments;
-            $this->grav['twig']->pages = $this->fetchPages();
+            $this->initializeFrontend();
         }
     }
 
@@ -163,6 +202,14 @@ class CommentsPlugin extends Plugin
                 $email = filter_var(urldecode($post['email']), FILTER_SANITIZE_STRING);
                 $title = filter_var(urldecode($post['title']), FILTER_SANITIZE_STRING);
 
+                if (isset($this->grav['user'])) {
+                    $user = $this->grav['user'];
+                    if ($user->authenticated) {
+                        $name = $user->fullname;
+                        $email = $user->email;
+                    }
+                }
+
                 /** @var Language $language */
                 $language = $this->grav['language'];
                 $lang = $language->getLanguage();
@@ -177,7 +224,7 @@ class CommentsPlugin extends Plugin
 
                     $data['comments'][] = [
                         'text' => $text,
-                        'date' => gmdate('D, d M Y H:i:s', time()),
+                        'date' => date('D, d M Y H:i:s', time()),
                         'author' => $name,
                         'email' => $email
                     ];
@@ -187,7 +234,7 @@ class CommentsPlugin extends Plugin
                         'lang' => $lang,
                         'comments' => array([
                             'text' => $text,
-                            'date' => gmdate('D, d M Y H:i:s', time()),
+                            'date' => date('D, d M Y H:i:s', time()),
                             'author' => $name,
                             'email' => $email
                         ])
@@ -195,6 +242,10 @@ class CommentsPlugin extends Plugin
                 }
 
                 $file->save(Yaml::dump($data));
+
+                //clear cache
+                $this->grav['cache']->delete($this->comments_cache_id);
+
                 break;
         }
     }
@@ -261,11 +312,6 @@ class CommentsPlugin extends Plugin
 
             for ($i = 0; $i < count($data['comments']); $i++) {
                 $commentTimestamp = \DateTime::createFromFormat('D, d M Y H:i:s', $data['comments'][$i]['date'])->getTimestamp();
-                $sevenDaysAgo = time() - (7 * 24 * 60 * 60);
-
-                if ($commentTimestamp < $sevenDaysAgo) {
-                    continue;
-                }
 
                 $data['comments'][$i]['pageTitle'] = $data['title'];
                 $data['comments'][$i]['filePath'] = $file->filePath;
@@ -297,11 +343,20 @@ class CommentsPlugin extends Plugin
      * Return the comments associated to the current route
      */
     private function fetchComments() {
+        $cache = $this->grav['cache'];
+        //search in cache
+        if ($comments = $cache->fetch($this->comments_cache_id)) {
+            return $comments;
+        }
+
         $lang = $this->grav['language']->getLanguage();
         $filename = $lang ? '/' . $lang : '';
         $filename .= $this->grav['uri']->path() . '.yaml';
 
-        return $this->getDataFromFilename($filename)['comments'];
+        $comments = $this->getDataFromFilename($filename)['comments'];
+        //save to cache if enabled
+        $cache->save($this->comments_cache_id, $comments);
+        return $comments;
     }
 
     /**
@@ -317,7 +372,7 @@ class CommentsPlugin extends Plugin
             $pages[] = [
                 'title' => $file->data['title'],
                 'commentsCount' => count($file->data['comments']),
-                'lastCommentDate' => gmdate('D, d M Y H:i:s', $file->modifiedDate)
+                'lastCommentDate' => date('D, d M Y H:i:s', $file->modifiedDate)
             ];
         }
 

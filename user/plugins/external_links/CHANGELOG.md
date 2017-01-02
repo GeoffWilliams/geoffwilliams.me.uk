@@ -1,3 +1,36 @@
+# v1.4.3
+## 10/31/2016
+
+3. [](#bugfix)
+  * Fixed [#11](https://github.com/Sommerregen/grav-plugin-external-links/issues/11) (Not working with cache enabling) (see PR [#15](https://github.com/Sommerregen/grav-plugin-external-links/pull/15))
+  * Fixed [#13](https://github.com/Sommerregen/grav-plugin-external-links/issues/13) (Preferences Not Showing)
+
+# v1.4.2
+## 12/06/2015
+
+1. [](#new)
+  * Added French translations [#8](https://github.com/Sommerregen/grav-plugin-external-links/pull/8/files) (Thanks to @MATsxm)
+
+# v1.4.1
+## 11/18/2015
+
+2. [](#improved)
+  * Page specific options now respect the default configurations set in the admin panel
+
+# v1.4.0
+## 11/17/2015
+
+1. [](#new)
+  * Added `External Links` options to page options tab
+2. [](#improved)
+  * Improved `isExternalUrl` function to allow custom schemes and whether to evaluate links beginning with `.www` or not
+  * Added more blueprint options
+  * Improved code
+  * Updated docs
+3. [](#bugfix)
+  * Fixed [#7](https://github.com/Sommerregen/grav-plugin-external-links/issues/7) (Possible issue with malformed URLs)
+  * Fixes `external_links` filter function
+
 # v1.3.1
 ## 09/09/2015
 
