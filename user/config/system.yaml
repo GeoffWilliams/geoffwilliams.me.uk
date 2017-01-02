@@ -4,7 +4,7 @@ home:
   alias: '/About'
 
 pages:
-  theme: antimatter
+  theme: geoffwilliams-me-uk
   markdown_extra: false
   process:
     markdown: true
