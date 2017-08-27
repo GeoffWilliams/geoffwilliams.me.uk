@@ -112,6 +112,8 @@ A while later you should have a cool benchy!
 ## Results
 I've been having poor results with this printer for a while now because its been extruding filament far too hot - if I listen carefully it sounds like a bowl of rice crispies as the filament bubbles and burns.  It also STINKS and was giving me really bad headaches!  With the GCODE cpu both of these problems are gone and the benchy looks great!  This definitely gave this printer a new lease of life.  There's still a few imperfections in the benchy which I think are hardware related.  The unit sways a bit because I put it on some felt feet to reduce noise and probably the belts are due for replacement/tightening... its been 4 years though and I've never been happier with the UP MINI - I just wish it had shipped with CPU in the first place
 
+![benchy](benchy.jpg)
+
 # Troubleshooting
 1. make sure nozzle is at correct height
 2. make sure you enabled the heated printer bed
