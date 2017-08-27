@@ -2,7 +2,7 @@
 /**
  * @package    Grav.Common
  *
- * @copyright  Copyright (C) 2014 - 2016 RocketTheme, LLC. All rights reserved.
+ * @copyright  Copyright (C) 2014 - 2017 RocketTheme, LLC. All rights reserved.
  * @license    MIT License; see LICENSE file for details.
  */
 
@@ -17,6 +17,7 @@ use RocketTheme\Toolbox\Event\Event;
  * The GravCache object is used throughout Grav to store and retrieve cached data.
  * It uses DoctrineCache library and supports a variety of caching mechanisms. Those include:
  *
+ * APCu
  * APC
  * XCache
  * RedisCache
@@ -59,6 +60,14 @@ class Cache extends Getters
         'cache://compiled/',
         'cache://validated-',
         'cache://images',
+        'asset://',
+    ];
+
+    protected static $standard_remove_no_images = [
+        'cache://twig/',
+        'cache://doctrine/',
+        'cache://compiled/',
+        'cache://validated-',
         'asset://',
     ];
 
@@ -173,6 +182,12 @@ class Cache extends Getters
         $setting = $this->driver_setting;
         $driver_name = 'file';
 
+        // CLI compatibility requires a non-volatile cache driver
+        if ($this->config->get('system.cache.cli_compatibility') && (
+            $setting == 'auto' || $this->isVolatileDriver($setting))) {
+            $setting = $driver_name;
+        }
+
         if (!$setting || $setting == 'auto') {
             if (extension_loaded('apcu')) {
                 $driver_name = 'apcu';
@@ -250,7 +265,7 @@ class Cache extends Getters
      *
      * @param  string $id the id of the cached entry
      *
-     * @return object     returns the cached entry, can be any type, or false if doesn't exist
+     * @return object|bool     returns the cached entry, can be any type, or false if doesn't exist
      */
     public function fetch($id)
     {
@@ -353,7 +368,12 @@ class Cache extends Getters
                 $remove_paths = self::$tmp_remove;
                 break;
             default:
-                $remove_paths = self::$standard_remove;
+                if (Grav::instance()['config']->get('system.cache.clear_images_by_default')) {
+                    $remove_paths = self::$standard_remove;
+                } else {
+                    $remove_paths = self::$standard_remove_no_images;
+                }
+
         }
 
         // Clearing cache event to add paths to clear
@@ -370,7 +390,9 @@ class Cache extends Getters
 
                 if (is_array($files)) {
                     foreach ($files as $file) {
-                        if (is_file($file)) {
+                        if (is_link($file)) {
+                            $output[] = '<yellow>Skipping symlink:  </yellow>' . $file;
+                        } elseif (is_file($file)) {
                             if (@unlink($file)) {
                                 $anything = true;
                             }
@@ -434,5 +456,40 @@ class Cache extends Getters
         }
 
         return $this->lifetime;
+    }
+
+    /**
+     * Returns the current driver name
+     *
+     * @return mixed
+     */
+    public function getDriverName()
+    {
+        return $this->driver_name;
+    }
+
+    /**
+     * Returns the current driver setting
+     *
+     * @return mixed
+     */
+    public function getDriverSetting()
+    {
+        return $this->driver_setting;
+    }
+
+    /**
+     * is this driver a volatile driver in that it resides in PHP process memory
+     *
+     * @param $setting
+     * @return bool
+     */
+    public function isVolatileDriver($setting)
+    {
+        if (in_array($setting, ['apc', 'apcu', 'xcache', 'wincache'])) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

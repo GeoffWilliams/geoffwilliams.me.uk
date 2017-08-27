@@ -2,7 +2,7 @@
 /**
  * @package    Grav.Common.File
  *
- * @copyright  Copyright (C) 2014 - 2016 RocketTheme, LLC. All rights reserved.
+ * @copyright  Copyright (C) 2014 - 2017 RocketTheme, LLC. All rights reserved.
  * @license    MIT License; see LICENSE file for details.
  */
 
@@ -69,7 +69,8 @@ trait CompiledFile
 
                         // Compile cached file into bytecode cache
                         if (function_exists('opcache_invalidate')) {
-                            opcache_invalidate($file->filename(), true);
+                            // Silence error if function exists, but is restricted.
+                            @opcache_invalidate($file->filename(), true);
                         }
                     }
                 }

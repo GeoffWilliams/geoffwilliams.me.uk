@@ -1,3 +1,34 @@
+# v1.5.3
+## 02/18/2017
+
+3. [](#bugfix)
+  * Fixed Russian translation strings [#17](https://github.com/Sommerregen/grav-plugin-external-links/pull/17) (Thanks to [@geschke](https://github.com/geschke) for the fast PR)
+
+# v1.5.2
+## 02/17/2017
+
+1. [](#new)
+  * Added Russian translations [#16](https://github.com/Sommerregen/grav-plugin-external-links/pull/16) (Thanks to [@ktaranov](https://github.com/ktaranov))
+
+# v1.5.1
+## 02/10/2017
+
+3. [](#bugfix)
+  * Fixed error in getting the remote image size
+
+# v1.5.0
+## 02/09/2017
+
+2. [](#improved)
+  * Use tabs in admin panel settings for better user experience
+  * Use toggle buttons for page settings
+
+# v1.4.4
+## 01/11/2017
+
+3. [](#bugfix)
+  * Fixed `CURLOPT_AUTOREFERER` constant
+
 # v1.4.3
 ## 10/31/2016
 
@@ -9,7 +40,7 @@
 ## 12/06/2015
 
 1. [](#new)
-  * Added French translations [#8](https://github.com/Sommerregen/grav-plugin-external-links/pull/8/files) (Thanks to @MATsxm)
+  * Added French translations [#8](https://github.com/Sommerregen/grav-plugin-external-links/pull/8) (Thanks to [@MATsxm](https://github.com/MATsxm))
 
 # v1.4.1
 ## 11/18/2015
@@ -87,7 +118,7 @@
 1. [](#new)
   * By default `External Links` now uses the class `external-links` for CSS styling; using `external` is still possible e.g. for manually markup external links
 2. [](#improved)
-  * Improved usage example in README.md
+  * Improved usage example in `README.md`
 3. [](#bugfix)
   * Fixed [#1](https://github.com/Sommerregen/grav-plugin-external-links/issues/4) (Issue with LightSlider plugin)
 
@@ -95,7 +126,7 @@
 ## 02/06/2015
 
 1. [](#new)
-  * Added usage example in README.md
+  * Added usage example in `README.md`
   * Add icons next to external links via CSS when using class `external` only
 2. [](#improved)
   * Added support for HHVM **(requires Grav 0.9.17+)**

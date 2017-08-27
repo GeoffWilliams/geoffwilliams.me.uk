@@ -2,7 +2,7 @@
 /**
  * @package    Grav.Common
  *
- * @copyright  Copyright (C) 2014 - 2016 RocketTheme, LLC. All rights reserved.
+ * @copyright  Copyright (C) 2014 - 2017 RocketTheme, LLC. All rights reserved.
  * @license    MIT License; see LICENSE file for details.
  */
 
@@ -277,7 +277,13 @@ class Uri
         }
 
         // Set some defaults
-        $this->root = $grav['config']->get('system.custom_base_url') ?: $this->base . $this->root_path;
+        if ($grav['config']->get('system.custom_base_url')) {
+            $this->root_path = parse_url($grav['config']->get('system.custom_base_url'), PHP_URL_PATH);
+            $this->root = $grav['config']->get('system.custom_base_url');
+        } else {
+            $this->root = $this->base . $this->root_path;
+        }
+
         $this->url = $this->base . $this->uri;
 
         // get any params and remove them
@@ -721,7 +727,7 @@ class Uri
      *
      * @return boolean      is eternal state
      */
-    public function isExternal($url)
+    public static function isExternal($url)
     {
         if (Utils::startsWith($url, 'http')) {
             return true;
@@ -1079,5 +1085,21 @@ class Uri
         $urlWithNonce = $url . '/' . $nonceParamName . Grav::instance()['config']->get('system.param_sep', ':') . Utils::getNonce($action);
 
         return $urlWithNonce;
+    }
+
+    /**
+     * Is the passed in URL a valid URL?
+     *
+     * @param $url
+     * @return bool
+     */
+    public static function isValidUrl($url)
+    {
+        $regex = '/^(?:(https?|ftp|telnet):)?\/\/((?:[a-z0-9@:.-]|%[0-9A-F]{2}){3,})(?::(\d+))?((?:\/(?:[a-z0-9-._~!$&\'\(\)\*\+\,\;\=\:\@]|%[0-9A-F]{2})*)*)(?:\?((?:[a-z0-9-._~!$&\'\(\)\*\+\,\;\=\:\/?@]|%[0-9A-F]{2})*))?(?:#((?:[a-z0-9-._~!$&\'\(\)\*\+\,\;\=\:\/?@]|%[0-9A-F]{2})*))?/';
+        if (preg_match($regex, $url)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

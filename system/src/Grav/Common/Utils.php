@@ -2,7 +2,7 @@
 /**
  * @package    Grav.Common
  *
- * @copyright  Copyright (C) 2014 - 2016 RocketTheme, LLC. All rights reserved.
+ * @copyright  Copyright (C) 2014 - 2017 RocketTheme, LLC. All rights reserved.
  * @license    MIT License; see LICENSE file for details.
  */
 
@@ -107,6 +107,26 @@ abstract class Utils
     public static function mergeObjects($obj1, $obj2)
     {
         return (object)array_merge((array)$obj1, (array)$obj2);
+    }
+
+    /**
+     * Recursive Merge with uniqueness
+     *
+     * @param $array1
+     * @param $array2
+     * @return mixed
+     */
+    public static function arrayMergeRecursiveUnique($array1, $array2)
+    {
+        if (empty($array1)) return $array2; //optimize the base case
+
+        foreach ($array2 as $key => $value) {
+            if (is_array($value) && is_array(@$array1[$key])) {
+                $value = static::arrayMergeRecursiveUnique($array1[$key], $value);
+            }
+            $array1[$key] = $value;
+        }
+        return $array1;
     }
 
     /**
@@ -812,5 +832,75 @@ abstract class Utils
 
 
         return $array;
+    }
+
+    /**
+     * Utility method to determine if the current OS is Windows
+     *
+     * @return bool
+     */
+    public static function isWindows() {
+        return strncasecmp(PHP_OS, 'WIN', 3) == 0;
+    }
+
+    /**
+     * Utility to determine if the server running PHP is Apache
+     *
+     * @return bool
+     */
+    public static function isApache() {
+        return strpos($_SERVER["SERVER_SOFTWARE"], 'Apache') !== false;
+    }
+
+    /**
+     * Get's path based on a token
+     *
+     * @param $path
+     * @param null $page
+     * @return string
+     */
+    public static function getPagePathFromToken($path, $page = null)
+    {
+        $path_parts = pathinfo($path);
+        $grav       = Grav::instance();
+
+        $basename = '';
+        if (isset($path_parts['extension'])) {
+            $basename = '/' . $path_parts['basename'];
+            $path     = rtrim($path_parts['dirname'], ':');
+        }
+
+        $regex = '/(@self|self@)|((?:@page|page@):(?:.*))|((?:@theme|theme@):(?:.*))/';
+        preg_match($regex, $path, $matches);
+
+        if ($matches) {
+            if ($matches[1]) {
+                if (is_null($page)) {
+                    throw new \RuntimeException('Page not available for this self@ reference');
+                }
+            } elseif ($matches[2]) {
+                // page@
+                $parts = explode(':', $path);
+                $route = $parts[1];
+                $page  = $grav['page']->find($route);
+            } elseif ($matches[3]) {
+                // theme@
+                $parts = explode(':', $path);
+                $route = $parts[1];
+                $theme = str_replace(ROOT_DIR, '', $grav['locator']->findResource("theme://"));
+
+                return $theme . $route . $basename;
+            }
+        } else {
+            return $path . $basename;
+        }
+
+        if (!$page) {
+            throw new \RuntimeException('Page route not found: ' . $path);
+        }
+
+        $path = str_replace($matches[0], rtrim($page->relativePagePath(), '/'), $path);
+
+        return $path . $basename;
     }
 }

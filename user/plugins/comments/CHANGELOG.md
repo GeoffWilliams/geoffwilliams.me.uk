@@ -1,3 +1,21 @@
+# v1.2.7
+## 05/12/2017
+
+1. [](#improved)
+    * Added Japanese translation
+    * Move captcha over email [#45](https://github.com/getgrav/grav-plugin-comments/issues/45)
+1. [](#bugfix)
+    * Fix comment form processing
+    * Fix issue with scope for autofilled values
+
+# v1.2.6
+## 01/09/2017
+
+1. [](#improved)
+    * Use existing `Utils::startsWith()` method
+1. [](#bugfix)
+    * Fix [#41](https://github.com/getgrav/grav-plugin-comments/issues/41) using Comments in a Gantry-powered theme did not escape the comment form token correctly
+
 # v1.2.5
 ## 09/16/2016
 

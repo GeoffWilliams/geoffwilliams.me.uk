@@ -2,7 +2,7 @@
 /**
  * @package    Grav.Common.Page
  *
- * @copyright  Copyright (C) 2014 - 2016 RocketTheme, LLC. All rights reserved.
+ * @copyright  Copyright (C) 2014 - 2017 RocketTheme, LLC. All rights reserved.
  * @license    MIT License; see LICENSE file for details.
  */
 
@@ -43,7 +43,12 @@ class Pages
     /**
      * @var string
      */
-    protected $base;
+    protected $base = '';
+
+    /**
+     * @var array|string[]
+     */
+    protected $baseUrl = [];
 
     /**
      * @var array|string[]
@@ -90,6 +95,8 @@ class Pages
      */
     static protected $home_route;
 
+    protected $pages_cache_id;
+
     /**
      * Constructor
      *
@@ -98,7 +105,6 @@ class Pages
     public function __construct(Grav $c)
     {
         $this->grav = $c;
-        $this->base = '';
     }
 
     /**
@@ -113,9 +119,80 @@ class Pages
         if ($path !== null) {
             $path = trim($path, '/');
             $this->base = $path ? '/' . $path : null;
+            $this->baseUrl = [];
         }
 
         return $this->base;
+    }
+
+    /**
+     *
+     * Get base URL for Grav pages.
+     *
+     * @param  string $lang     Optional language code for multilingual links.
+     * @param  bool   $absolute If true, return absolute url, if false, return relative url. Otherwise return default.
+     *
+     * @return string
+     */
+    public function baseUrl($lang = null, $absolute = null)
+    {
+        $lang = (string) $lang;
+        $type = $absolute === null ? 'base_url' : ($absolute ? 'base_url_absolute' : 'base_url_relative');
+        $key = "{$lang} {$type}";
+
+        if (!isset($this->baseUrl[$key])) {
+            /** @var Config $config */
+            $config = $this->grav['config'];
+
+            /** @var Language $language */
+            $language = $this->grav['language'];
+
+            if (!$lang) {
+                $lang = $language->getActive();
+            }
+
+            $path_append = rtrim($this->grav['pages']->base(), '/');
+            if ($language->getDefault() != $lang || $config->get('system.languages.include_default_lang') === true) {
+                $path_append .= $lang ? '/' . $lang : '';
+            }
+
+            $this->baseUrl[$key] = $this->grav[$type] . $path_append;
+        }
+
+        return $this->baseUrl[$key];
+    }
+
+    /**
+     *
+     * Get home URL for Grav site.
+     *
+     * @param  string $lang     Optional language code for multilingual links.
+     * @param  bool   $absolute If true, return absolute url, if false, return relative url. Otherwise return default.
+     *
+     * @return string
+     */
+    public function homeUrl($lang = null, $absolute = null)
+    {
+        return $this->baseUrl($lang, $absolute) ?: '/';
+    }
+
+    /**
+     *
+     * Get home URL for Grav site.
+     *
+     * @param  string $route    Optional route to the page.
+     * @param  string $lang     Optional language code for multilingual links.
+     * @param  bool   $absolute If true, return absolute url, if false, return relative url. Otherwise return default.
+     *
+     * @return string
+     */
+    public function url($route = '/', $lang = null, $absolute = null)
+    {
+        if ($route === '/') {
+            return $this->homeUrl($lang, $absolute);
+        }
+
+        return $this->baseUrl($lang, $absolute) . $route;
     }
 
     /**
@@ -154,7 +231,7 @@ class Pages
     /**
      * Returns a list of all pages.
      *
-     * @return Page
+     * @return array|Page[]
      */
     public function instances()
     {
@@ -290,35 +367,85 @@ class Pages
     }
 
     /**
+     * Get a page ancestor.
+     *
+     * @param  string $route The relative URL of the page
+     * @param  string $path The relative path of the ancestor folder
+     *
+     * @return Page|null
+     */
+    public function ancestor($route, $path = null)
+    {
+        if (!is_null($path)) {
+
+            $page = $this->dispatch($route, true);
+
+            if ($page->path() == $path) {
+                return $page;
+            } elseif (!$page->parent()->root()) {
+                return $this->ancestor($page->parent()->route(), $path);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get a page ancestor trait.
+     *
+     * @param  string $route The relative route of the page
+     * @param  string $field The field name of the ancestor to query for
+     *
+     * @return Page|null
+     */
+    public function inherited($route, $field = null)
+    {
+        if (!is_null($field)) {
+
+            $page = $this->dispatch($route, true);
+
+            $ancestorField = $page->parent()->value('header.' . $field);
+
+            if ($ancestorField !== null) {
+                return $page->parent();
+            } elseif (!$page->parent()->root()) {
+                return $this->inherited($page->parent()->route(), $field);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * alias method to return find a page.
      *
-     * @param string $url The relative URL of the page
+     * @param string $route The relative URL of the page
      * @param bool   $all
      *
      * @return Page|null
      */
-    public function find($url, $all = false)
+    public function find($route, $all = false)
     {
-        return $this->dispatch($url, $all, false);
+        return $this->dispatch($route, $all, false);
     }
 
     /**
      * Dispatch URI to a page.
      *
-     * @param string $url The relative URL of the page
+     * @param string $route The relative URL of the page
      * @param bool $all
      *
      * @param bool $redirect
      * @return Page|null
      * @throws \Exception
      */
-    public function dispatch($url, $all = false, $redirect = true)
+    public function dispatch($route, $all = false, $redirect = true)
     {
         // Fetch page if there's a defined route to it.
-        $page = isset($this->routes[$url]) ? $this->get($this->routes[$url]) : null;
+        $page = isset($this->routes[$route]) ? $this->get($this->routes[$route]) : null;
         // Try without trailing slash
-        if (!$page && Utils::endsWith($url, '/')) {
-            $page = isset($this->routes[rtrim($url, '/')]) ? $this->get($this->routes[rtrim($url, '/')]) : null;
+        if (!$page && Utils::endsWith($route, '/')) {
+            $page = isset($this->routes[rtrim($route, '/')]) ? $this->get($this->routes[rtrim($route, '/')]) : null;
         }
 
         // Are we in the admin? this is important!
@@ -338,21 +465,22 @@ class Pages
                 $config = $this->grav['config'];
 
                 // See if route matches one in the site configuration
-                $route = $config->get("site.routes.{$url}");
-                if ($route) {
-                    $page = $this->dispatch($route, $all);
+                $site_route = $config->get("site.routes.{$route}");
+                if ($site_route) {
+                    $page = $this->dispatch($site_route, $all);
                 } else {
                     // Try Regex style redirects
-                    $source_url = $url;
-                    $extension = $this->grav['uri']->extension();
-                    if (isset($extension)) {
+                    $uri = $this->grav['uri'];
+                    $source_url = $route;
+                    $extension = $uri->extension();
+                    if (isset($extension) && !Utils::endsWith($uri->url(), $extension)) {
                         $source_url.= '.' . $extension;
                     }
 
                     $site_redirects = $config->get("site.redirects");
                     if (is_array($site_redirects)) {
                         foreach ((array)$site_redirects as $pattern => $replace) {
-                            $pattern = '#' . $pattern . '#';
+                            $pattern = '#^' . str_replace('/', '\/', ltrim($pattern, '^')) . '#';
                             try {
                                 $found = preg_replace($pattern, $replace, $source_url);
                                 if ($found != $source_url) {
@@ -368,7 +496,7 @@ class Pages
                     $site_routes = $config->get("site.routes");
                     if (is_array($site_routes)) {
                         foreach ((array)$site_routes as $pattern => $replace) {
-                            $pattern = '#' . $pattern . '#';
+                            $pattern = '#^' . str_replace('/', '\/', ltrim($pattern, '^')) . '#';
                             try {
                                 $found = preg_replace($pattern, $replace, $source_url);
                                 if ($found != $source_url) {
@@ -451,17 +579,65 @@ class Pages
     }
 
     /**
+     * Get available parents raw routes.
+     *
+     * @return array
+     */
+    public static function parentsRawRoutes()
+    {
+        $rawRoutes = true;
+
+        return self::getParents($rawRoutes);
+    }
+
+    /**
+     * Get available parents routes
+     *
+     * @param bool $rawRoutes get the raw route or the normal route
+     *
+     * @return array
+     */
+    private static function getParents($rawRoutes)
+    {
+        $grav = Grav::instance();
+
+        /** @var Pages $pages */
+        $pages = $grav['pages'];
+
+        $parents = $pages->getList(null, 0, $rawRoutes);
+
+        if (isset($grav['admin'])) {
+            // Remove current route from parents
+
+            /** @var Admin $admin */
+            $admin = $grav['admin'];
+
+            $page = $admin->getPage($admin->route);
+            $page_route = $page->route();
+            if (isset($parents[$page_route])) {
+                unset($parents[$page_route]);
+            }
+
+        }
+
+        return $parents;
+    }
+
+    /**
      * Get list of route/title of all pages.
      *
      * @param Page $current
-     * @param int  $level
+     * @param int $level
      * @param bool $rawRoutes
      *
+     * @param bool $showAll
+     * @param bool $showFullpath
+     * @param bool $showSlug
+     * @param bool $showModular
+     * @param bool $limitLevels
      * @return array
-     *
-     * @throws \RuntimeException
      */
-    public function getList(Page $current = null, $level = 0, $rawRoutes = false)
+    public function getList(Page $current = null, $level = 0, $rawRoutes = false, $showAll = true, $showFullpath = false, $showSlug = false, $showModular = false, $limitLevels = false)
     {
         if (!$current) {
             if ($level) {
@@ -479,11 +655,27 @@ class Pages
             } else {
                 $route = $current->route();
             }
-            $list[$route] = str_repeat('&nbsp; ', ($level - 1) * 2) . $current->title();
+
+            if ($showFullpath) {
+                $option = $current->route();
+            } else {
+                $extra  = $showSlug ? '(' . $current->slug() . ') ' : '';
+                $option = str_repeat('&mdash;-', $level). '&rtrif; ' . $extra . $current->title();
+
+
+            }
+
+            $list[$route] = $option;
+
+
         }
 
-        foreach ($current->children() as $next) {
-            $list = array_merge($list, $this->getList($next, $level + 1, $rawRoutes));
+        if ($limitLevels === false || ($level+1 < $limitLevels)) {
+            foreach ($current->children() as $next) {
+                if ($showAll || $next->routable() || ($next->modular() && $showModular)) {
+                    $list = array_merge($list, $this->getList($next, $level + 1, $rawRoutes, $showAll, $showFullpath, $showSlug, $showModular, $limitLevels));
+                }
+            }
         }
 
         return $list;
@@ -630,50 +822,7 @@ class Pages
         return self::getParents($rawRoutes);
     }
 
-    /**
-     * Get available parents raw routes.
-     *
-     * @return array
-     */
-    public static function parentsRawRoutes()
-    {
-        $rawRoutes = true;
 
-        return self::getParents($rawRoutes);
-    }
-
-    /**
-     * Get available parents routes
-     *
-     * @param bool $rawRoutes get the raw route or the normal route
-     *
-     * @return array
-     */
-    private static function getParents($rawRoutes)
-    {
-        $grav = Grav::instance();
-
-        /** @var Pages $pages */
-        $pages = $grav['pages'];
-
-        $parents = $pages->getList(null, 0, $rawRoutes);
-
-        if (isset($grav['admin'])) {
-            // Remove current route from parents
-
-            /** @var Admin $admin */
-            $admin = $grav['admin'];
-
-            $page = $admin->getPage($admin->route);
-            $page_route = $page->route();
-            if (isset($parents[$page_route])) {
-                unset($parents[$page_route]);
-            }
-
-        }
-
-        return $parents;
-    }
 
     /**
      * Gets the home route
@@ -764,18 +913,19 @@ class Pages
                     break;
                 case 'hash':
                     $hash = Folder::hashAllFiles($pages_dir);
+                    break;
                 default:
                     $hash = Folder::lastModifiedFile($pages_dir);
             }
 
-            $page_cache_id = md5($pages_dir . $hash . $language->getActive() . $config->checksum());
+            $this->pages_cache_id = md5($pages_dir . $hash . $language->getActive() . $config->checksum());
 
-            list($this->instances, $this->routes, $this->children, $taxonomy_map, $this->sort) = $cache->fetch($page_cache_id);
+            list($this->instances, $this->routes, $this->children, $taxonomy_map, $this->sort) = $cache->fetch($this->pages_cache_id);
             if (!$this->instances) {
                 $this->grav['debugger']->addMessage('Page cache missed, rebuilding pages..');
 
                 // recurse pages and cache result
-                $this->resetPages($pages_dir, $page_cache_id);
+                $this->resetPages($pages_dir, $this->pages_cache_id);
 
             } else {
                 // If pages was found in cache, set the taxonomy
@@ -792,9 +942,8 @@ class Pages
      * Accessible method to manually reset the pages cache
      *
      * @param $pages_dir
-     * @param $page_cache_id
      */
-    public function resetPages($pages_dir, $page_cache_id)
+    public function resetPages($pages_dir)
     {
         $this->recurse($pages_dir);
         $this->buildRoutes();
@@ -807,7 +956,7 @@ class Pages
             $taxonomy = $this->grav['taxonomy'];
 
             // save pages, routes, taxonomy, and sort to cache
-            $cache->save($page_cache_id, [$this->instances, $this->routes, $this->children, $taxonomy->taxonomy(), $this->sort]);
+            $cache->save($this->pages_cache_id, [$this->instances, $this->routes, $this->children, $taxonomy->taxonomy(), $this->sort]);
         }
     }
 
@@ -1078,7 +1227,9 @@ class Pages
                 case (is_string($header_query[0])):
                     $child_header = new Header((array)$child->header());
                     $header_value = $child_header->get($header_query[0]);
-                    if ($header_value) {
+                    if (is_array($header_value)) {
+                        $list[$key] = implode(',',$header_value);
+                    } elseif ($header_value) {
                         $list[$key] = $header_value;
                     } else {
                         $list[$key] = $header_default ?: $key;
@@ -1106,6 +1257,12 @@ class Pages
                 $locale = setlocale(LC_COLLATE, 0); //`setlocale` with a 0 param returns the current locale set
                 $col = Collator::create($locale);
                 if ($col) {
+                    if (($sort_flags & SORT_NATURAL) === SORT_NATURAL) {
+                        $list = preg_replace_callback('~([0-9]+)\.~', function($number) {
+                            return sprintf('%032d.', $number[0]);
+                        }, $list);
+                    }
+
                     $col->asort($list, $sort_flags);
                 } else {
                     asort($list, $sort_flags);
@@ -1160,5 +1317,18 @@ class Pages
         }
 
         return $new;
+    }
+
+    /**
+     * Get the Pages cache ID
+     *
+     * this is particularly useful to know if pages have changed and you want
+     * to sync another cache with pages cache - works best in `onPagesInitialized()`
+     *
+     * @return mixed
+     */
+    public function getPagesCacheId()
+    {
+        return $this->pages_cache_id;
     }
 }
