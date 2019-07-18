@@ -14,7 +14,7 @@ interface FileInterface
      * Get file instance.
      *
      * @param  string  $filename
-     * @return mixed
+     * @return static
      */
     public static function instance($filename);
 
@@ -38,7 +38,7 @@ interface FileInterface
     public function modified();
 
     /**
-     * Lock file for writing. Lock gets automatically released during the save().
+     * Lock file for writing.
      *
      * @param bool $block  For non-blocking lock, set the parameter to false.
      * @return bool
