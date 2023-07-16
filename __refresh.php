@@ -1,4 +1,4 @@
 <?php
- shell_exec('cd ~/www && git pull origin master && ./bin/grav clear-cache');
+ shell_exec('cd ~/www && git pull origin master);
  echo "updated"
 ?>
